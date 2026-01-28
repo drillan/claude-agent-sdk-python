@@ -1590,7 +1590,7 @@ class ClaudeAgentOptions:
     ``allowed_tools`` instead.
     """
 
-    allowed_tools: list[str] = field(default_factory=list)
+    allowed_tools: list[str] | None = None
     """Tool names that are auto-allowed without prompting for permission.
 
     These tools execute automatically without asking the user for approval.

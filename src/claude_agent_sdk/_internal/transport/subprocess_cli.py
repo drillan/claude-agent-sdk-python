@@ -182,7 +182,7 @@ class SubprocessCLITransport(Transport):
 
     def _apply_skills_defaults(
         self,
-    ) -> tuple[list[str], list[str] | None]:
+    ) -> tuple[list[str] | None, list[str] | None]:
         """Compute effective allowed_tools and setting_sources for skills.
 
         When ``options.skills`` is ``"all"``, injects the bare ``Skill`` tool;
@@ -193,7 +193,10 @@ class SubprocessCLITransport(Transport):
 
         Does not mutate the original options object.
         """
-        allowed_tools: list[str] = list(self._options.allowed_tools)
+        original_allowed_tools = self._options.allowed_tools
+        allowed_tools: list[str] | None = (
+            list(original_allowed_tools) if original_allowed_tools is not None else None
+        )
         setting_sources: list[str] | None = (
             list(self._options.setting_sources)
             if self._options.setting_sources is not None
@@ -204,14 +207,21 @@ class SubprocessCLITransport(Transport):
         if skills is None:
             return allowed_tools, setting_sources
 
+        working_list: list[str] = allowed_tools if allowed_tools is not None else []
+
         if skills == "all":
-            if "Skill" not in allowed_tools:
-                allowed_tools.append("Skill")
+            if "Skill" not in working_list:
+                working_list.append("Skill")
         else:
             for name in skills:
                 pattern = f"Skill({name})"
-                if pattern not in allowed_tools:
-                    allowed_tools.append(pattern)
+                if pattern not in working_list:
+                    working_list.append(pattern)
+
+        if original_allowed_tools is None and not working_list:
+            allowed_tools = None
+        else:
+            allowed_tools = working_list
 
         if setting_sources is None:
             setting_sources = ["user", "project"]
@@ -253,7 +263,7 @@ class SubprocessCLITransport(Transport):
             self._apply_skills_defaults()
         )
 
-        if effective_allowed_tools:
+        if effective_allowed_tools is not None:
             cmd.extend(["--allowedTools", ",".join(effective_allowed_tools)])
 
         if self._options.max_turns:

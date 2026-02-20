@@ -206,6 +206,8 @@ class Query:
         }
         if self._agents:
             request["agents"] = self._agents
+        if self.sdk_mcp_servers:
+            request["sdkMcpServers"] = list(self.sdk_mcp_servers.keys())
         if self._exclude_dynamic_sections is not None:
             request["excludeDynamicSections"] = self._exclude_dynamic_sections
         # 'all' and omitted are equivalent at the wire level (no filter), so
